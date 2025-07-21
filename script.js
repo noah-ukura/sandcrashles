@@ -6,43 +6,80 @@ function startTracking() {
   const status = document.getElementById("status");
 
   if (!navigator.geolocation) {
-    status.textContent = "Geolocation is not supported by your browser.";
+    status.textContent = "Geolocation is not supported.";
     return;
   }
 
-  status.textContent = "Tracking location...";
+  // status.textContent = "Requesting location...";
 
-  navigator.geolocation.watchPosition(
+  navigator.geolocation.getCurrentPosition(
     (position) => {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
 
-      latSpan.textContent = lat.toFixed(6);
-      lonSpan.textContent = lon.toFixed(6);
+      // latSpan.textContent = lat.toFixed(6);
+      // lonSpan.textContent = lon.toFixed(6);
+      // status.textContent = "Location updated.";
 
-      if (!map) {
-        map = L.map("map").setView([lat, lon], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '© OpenStreetMap contributors',
-        }).addTo(map);
-        marker = L.marker([lat, lon]).addTo(map).bindPopup("You are here").openPopup();
-      } else {
-        map.setView([lat, lon]);
-        marker.setLatLng([lat, lon]);
-      }
+      map = L.map("map").setView([lat, lon], 13);
 
-      status.textContent = "Location updated.";
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
+
+      // Main user marker
+      marker = L.marker([lat, lon]).addTo(map)
+        .bindPopup('<div id="popup-content"><button id="popup-btn">Click Me</button></div>')
+        .openPopup();
+
+      // Listen for popup clicks
+      map.on('popupopen', () => {
+        const btn = document.getElementById("popup-btn");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            const response = prompt("text");
+            console.log("User input:", response);
+          });
+        }
+      });
+
+      // Add beach-like markers nearby
+      addRandomBeachMarkers(lat, lon);
+
     },
     (error) => {
-      status.textContent = `Error: ${error.message}`;
+      // status.textContent = `Error: ${error.message}`;
     },
     {
       enableHighAccuracy: true,
-      maximumAge: 0,
       timeout: 10000,
+      maximumAge: 0,
     }
   );
 }
-window.onload = function () {
-  startTracking();
+
+// Add 5 fake beach markers near user
+function addRandomBeachMarkers(userLat, userLon) {
+  for (let i = 0; i < 5; i++) {
+    const offsetLat = (Math.random() - 0.9) * 0.05;  // ~5km range
+    const offsetLon = (Math.random() - 0.9) * 0.05;
+
+    const lat = userLat + offsetLat;
+    const lon = userLon + offsetLon;
+
+    const beachMarker = L.marker([lat, lon], { icon: beachIcon() }).addTo(map);
+    beachMarker.bindPopup(`<b>🏖 Sandcastle Found!!</b><br>Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`);
+  }
 }
+
+// Optional: Custom beach icon
+function beachIcon() {
+  return L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/427/427735.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+}
+
+startTracking();
