@@ -1,38 +1,36 @@
-let map, marker;
+let map;
+function beachIcon() {
+  return L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/427/427735.png",
+    iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+  });
+}
+
+async function fetchNearbyBeaches(lat, lon, radius = 5000) {
+  const overpassQuery = `
+    [out:json][timeout:25];
+    (node["natural"="beach"](around:${radius},${lat},${lon});
+     way["natural"="beach"](around:${radius},${lat},${lon});
+     relation[type=multipolygon]["natural"="beach"](around:${radius},${lat},${lon});
+    );
+    out center;
+  `;
+  const resp = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: overpassQuery });
+  const data = await resp.json();
+  return data.elements;
+}
 
 function startTracking() {
-  const latSpan = document.getElementById("lat");
-  const lonSpan = document.getElementById("lon");
-  const status = document.getElementById("status");
-
-  if (!navigator.geolocation) {
-    status.textContent = "Geolocation is not supported.";
-    return;
-  }
-
-  // status.textContent = "Requesting location...";
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      // latSpan.textContent = lat.toFixed(6);
-      // lonSpan.textContent = lon.toFixed(6);
-      // status.textContent = "Location updated.";
-
-      map = L.map("map").setView([lat, lon], 13);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '© OpenStreetMap contributors',
-      }).addTo(map);
-
-      // Main user marker
-      marker = L.marker([lat, lon]).addTo(map)
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    map = L.map("map").setView([lat, lon], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '© OpenStreetMap contributors' }).addTo(map);
+    //L.marker([lat, lon]).addTo(map).bindPopup("You are here").openPopup();
+    marker = L.marker([lat, lon]).addTo(map)
         .bindPopup('<div id="popup-content"><button id="popup-btn">Sandcastle Found!!</button></div>')
         .openPopup();
 
-      // Listen for popup clicks
+    // Listen for popup clicks
       map.on('popupopen', () => {
         const btn = document.getElementById("popup-btn");
         if (btn) {
@@ -43,43 +41,15 @@ function startTracking() {
         }
       });
 
-      // Add beach-like markers nearby
-      addRandomBeachMarkers(lat, lon);
-
-    },
-    (error) => {
-      // status.textContent = `Error: ${error.message}`;
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    }
-  );
+    const beaches = await fetchNearbyBeaches(lat, lon);
+    beaches.forEach(el => {
+      const coords = el.type === "node" ? {lat: el.lat, lon: el.lon} : el.center;
+      if (!coords) return;
+      L.marker([coords.lat, coords.lon], { icon: beachIcon() })
+        .addTo(map)
+        .bindPopup(`<b>🏖 Beach</b><br>Lat: ${coords.lat.toFixed(4)}, Lon: ${coords.lon.toFixed(4)}`);
+    });
+  }, err => console.error("GPS error:", err), { enableHighAccuracy: true });
 }
 
-// Add 5 fake beach markers near user
-function addRandomBeachMarkers(userLat, userLon) {
-  for (let i = 0; i < 5; i++) {
-    const offsetLat = (Math.random() - 0.5) * 0.05;  // ~5km range
-    const offsetLon = (Math.random() - 0.5) * 0.05;
-
-    const lat = userLat + offsetLat;
-    const lon = userLon + offsetLon;
-
-    const beachMarker = L.marker([lat, lon], { icon: beachIcon() }).addTo(map);
-    beachMarker.bindPopup(`<b>🏖 Sandcastle Found!!</b><br>Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`);
-  }
-}
-
-// Optional: Custom beach icon
-function beachIcon() {
-  return L.icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/427/427735.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
-}
-
-startTracking();
+window.addEventListener("load", startTracking);
