@@ -29,7 +29,7 @@ function startTracking() {
 
       // Main user marker
       marker = L.marker([lat, lon]).addTo(map)
-        .bindPopup('<div id="popup-content"><button id="popup-btn">Click Me</button></div>')
+        .bindPopup('<div id="popup-content"><button id="popup-btn">Sandcastle Found!!</button></div>')
         .openPopup();
 
       // Listen for popup clicks
@@ -37,8 +37,8 @@ function startTracking() {
         const btn = document.getElementById("popup-btn");
         if (btn) {
           btn.addEventListener("click", () => {
-            const response = prompt("text");
-            console.log("User input:", response);
+            const response = alert("There's no sandcastle here, Noah just thinks you are amazing and wants you to be his girlfriend :)");
+            //console.log("User input:", response);
           });
         }
       });
@@ -61,8 +61,8 @@ function startTracking() {
 // Add 5 fake beach markers near user
 function addRandomBeachMarkers(userLat, userLon) {
   for (let i = 0; i < 5; i++) {
-    const offsetLat = (Math.random() - 0.9) * 0.05;  // ~5km range
-    const offsetLon = (Math.random() - 0.9) * 0.05;
+    const offsetLat = (Math.random() - 0.5) * 0.05;  // ~5km range
+    const offsetLon = (Math.random() - 0.5) * 0.05;
 
     const lat = userLat + offsetLat;
     const lon = userLon + offsetLon;
