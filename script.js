@@ -27,7 +27,7 @@ function startTracking() {
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '© OpenStreetMap contributors' }).addTo(map);
     //L.marker([lat, lon]).addTo(map).bindPopup("You are here").openPopup();
     marker = L.marker([lat, lon]).addTo(map)
-        .bindPopup('<div id="popup-content"><button id="popup-btn">Sandcastle Found!!</button></div>')
+        .bindPopup('<div id="popup-content"><button id="popup-btn">🏖 Sandcastle Found!!</button></div>')
         .openPopup();
 
     // Listen for popup clicks
@@ -47,7 +47,7 @@ function startTracking() {
       if (!coords) return;
       L.marker([coords.lat, coords.lon], { icon: beachIcon() })
         .addTo(map)
-        .bindPopup(`<b>🏖 Beach</b><br>Lat: ${coords.lat.toFixed(4)}, Lon: ${coords.lon.toFixed(4)}`);
+        .bindPopup(`<b>🏖 Sandcastle Found!!</b><br>Lat: ${coords.lat.toFixed(4)}, Lon: ${coords.lon.toFixed(4)}`);
     });
   }, err => console.error("GPS error:", err), { enableHighAccuracy: true });
 }
