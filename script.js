@@ -43,3 +43,6 @@ function startTracking() {
     }
   );
 }
+window.onload = function () {
+  startTracking();
+}
