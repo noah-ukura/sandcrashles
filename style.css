@@ -45,4 +45,8 @@ body {
   h1{
     font-weight: bolder;
     color:black;
+    font-size:40px;
+  }
+  p{
+    color:black;
   }
